@@ -712,6 +712,14 @@ if SERVER then
 end
 
 if CLIENT then
+    surface.CreateFont("Crusher_HintFont", {
+        font      = "Bahnschrift",
+        size      = 22,
+        weight    = 500,
+        antialias = true,
+        shadow    = true,
+    })
+
     net.Receive("Crusher_SetSubRole", function()
         local role = net.ReadString()
         LocalPlayer().SubRole = (role ~= "" and role or nil)
@@ -811,9 +819,14 @@ if CLIENT then
     local col_bar_fg = Color(180, 30, 30, 230)
 
     local function DrawHint(x, y, key, desc)
-        surface.SetFont("ZB_InterfaceSmall")
-        local kw, kh   = surface.GetTextSize(key)
-        local tw       = surface.GetTextSize(desc)
+        if not pcall(surface.SetFont, "ZCity_Fixed_Tiny") then
+            surface.SetFont("Crusher_HintFont")
+        end
+        local kw, kh   = surface.GetTextSize(key or "")
+        local tw       = surface.GetTextSize(desc or "")
+        kw = kw or 0
+        kh = kh or 16
+        tw = tw or 0
         local pad, gap = 5, 8
         local w        = pad + kw + gap + tw + pad
         local h        = kh + pad
