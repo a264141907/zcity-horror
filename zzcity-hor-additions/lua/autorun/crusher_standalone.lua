@@ -373,18 +373,30 @@ if SERVER then
         ["ValveBiped.Bip01_Head1"]      = function(org, ent) if not ent.noHead then hg.ExplodeHead(ent) end end,
         ["ValveBiped.Bip01_Pelvis"]     = function(org, ent) org.spine1 = 1 end,
         ["ValveBiped.Bip01_Spine2"]     = function(org, ent) org.spine2 = 1 end,
-        ["ValveBiped.Bip01_R_UpperArm"] = function(org, ent) hg.organism.AmputateLimb(org, "rarm") end,
-        ["ValveBiped.Bip01_R_Forearm"]  = function(org, ent) hg.organism.AmputateLimb(org, "rarm") end,
-        ["ValveBiped.Bip01_R_Hand"]     = function(org, ent) hg.organism.AmputateLimb(org, "rarm") end,
-        ["ValveBiped.Bip01_L_UpperArm"] = function(org, ent) hg.organism.AmputateLimb(org, "larm") end,
-        ["ValveBiped.Bip01_L_Forearm"]  = function(org, ent) hg.organism.AmputateLimb(org, "larm") end,
-        ["ValveBiped.Bip01_L_Hand"]     = function(org, ent) hg.organism.AmputateLimb(org, "larm") end,
-        ["ValveBiped.Bip01_R_Thigh"]    = function(org, ent) hg.organism.AmputateLimb(org, "rleg") end,
-        ["ValveBiped.Bip01_R_Calf"]     = function(org, ent) hg.organism.AmputateLimb(org, "rleg") end,
-        ["ValveBiped.Bip01_R_Foot"]     = function(org, ent) hg.organism.AmputateLimb(org, "rleg") end,
-        ["ValveBiped.Bip01_L_Thigh"]    = function(org, ent) hg.organism.AmputateLimb(org, "lleg") end,
-        ["ValveBiped.Bip01_L_Calf"]     = function(org, ent) hg.organism.AmputateLimb(org, "lleg") end,
-        ["ValveBiped.Bip01_L_Foot"]     = function(org, ent) hg.organism.AmputateLimb(org, "lleg") end,
+        ["ValveBiped.Bip01_R_UpperArm"] = function(org, ent) if not org["rarm" .. "amputated"] then hg.organism
+                    .AmputateLimb(org, "rarm") end end,
+        ["ValveBiped.Bip01_R_Forearm"]  = function(org, ent) if not org["rarm" .. "amputated"] then hg.organism
+                    .AmputateLimb(org, "rarm") end end,
+        ["ValveBiped.Bip01_R_Hand"]     = function(org, ent) if not org["rarm" .. "amputated"] then hg.organism
+                    .AmputateLimb(org, "rarm") end end,
+        ["ValveBiped.Bip01_L_UpperArm"] = function(org, ent) if not org["larm" .. "amputated"] then hg.organism
+                    .AmputateLimb(org, "larm") end end,
+        ["ValveBiped.Bip01_L_Forearm"]  = function(org, ent) if not org["larm" .. "amputated"] then hg.organism
+                    .AmputateLimb(org, "larm") end end,
+        ["ValveBiped.Bip01_L_Hand"]     = function(org, ent) if not org["larm" .. "amputated"] then hg.organism
+                    .AmputateLimb(org, "larm") end end,
+        ["ValveBiped.Bip01_R_Thigh"]    = function(org, ent) if not org["rleg" .. "amputated"] then hg.organism
+                    .AmputateLimb(org, "rleg") end end,
+        ["ValveBiped.Bip01_R_Calf"]     = function(org, ent) if not org["rleg" .. "amputated"] then hg.organism
+                    .AmputateLimb(org, "rleg") end end,
+        ["ValveBiped.Bip01_R_Foot"]     = function(org, ent) if not org["rleg" .. "amputated"] then hg.organism
+                    .AmputateLimb(org, "rleg") end end,
+        ["ValveBiped.Bip01_L_Thigh"]    = function(org, ent) if not org["lleg" .. "amputated"] then hg.organism
+                    .AmputateLimb(org, "lleg") end end,
+        ["ValveBiped.Bip01_L_Calf"]     = function(org, ent) if not org["lleg" .. "amputated"] then hg.organism
+                    .AmputateLimb(org, "lleg") end end,
+        ["ValveBiped.Bip01_L_Foot"]     = function(org, ent) if not org["lleg" .. "amputated"] then hg.organism
+                    .AmputateLimb(org, "lleg") end end,
     }
 
     local function ApplyStompLimbDamage(ply)
