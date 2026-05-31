@@ -187,6 +187,16 @@ if CLIENT then
             if IsValid(char) and char ~= ply then
                 ApplyHide(char, hide)
             end
+
+            if IsValid(ply) then
+                if hide then
+                    ply.NotSeen = true
+                    ply.zb_noclip_plyNotSeen = true
+                elseif ply.zb_noclip_plyNotSeen then
+                    ply.NotSeen = nil
+                    ply.zb_noclip_plyNotSeen = false
+                end
+            end
         end
     end)
 
