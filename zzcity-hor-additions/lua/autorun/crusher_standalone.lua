@@ -104,42 +104,43 @@ local function ContinueGrabbingHead(ply)
     if SERVER then
         net.Start("HMCD_GrabConfirmed")
         net.WriteBool(true)
+        net.WriteEntity(victim)
         net.Send(ply)
 
         local already_rag = IsValid(hg.GetCurrentCharacter(victim)) and hg.GetCurrentCharacter(victim) ~= victim
         if not already_rag then hg.LightStunPlayer(victim) end
-        timer.Simple(0, function()
+
+        local attempts = 0
+        local function TryCarry()
             if not IsValid(ply) or not IsValid(victim) then return end
+            if not ply.Ability_HeadGrab or not ply.Ability_HeadGrab.Grabbed then return end
+
             local rag = hg.GetCurrentCharacter(victim)
-            if not IsValid(rag) or rag == victim then
-                StopGrabbingHead(ply)
+            local bon = IsValid(rag) and rag ~= victim and rag:LookupBone("ValveBiped.Bip01_Head1")
+            local phys = bon and rag:GetPhysicsObjectNum(rag:TranslateBoneToPhysBone(bon))
+
+            if IsValid(rag) and rag ~= victim and bon and IsValid(phys) then
+                local dist = 25
+                hg.SetCarryEnt2(
+                    ply, rag, bon, phys:GetMass(),
+                    Vector(-2, 0, 0),
+                    ply:GetAimVector() * dist
+                    + ply:EyeAngles():Up() * 5
+                    + ply:EyeAngles():Right() * -5
+                    + ply:GetShootPos(),
+                    ply:EyeAngles() + Angle(-90, 90, 0)
+                )
                 return
             end
 
-            local bon = rag:LookupBone("ValveBiped.Bip01_Head1")
-            if not bon then
+            attempts = attempts + 1
+            if attempts < 20 then
+                timer.Simple(0, TryCarry)
+            else
                 StopGrabbingHead(ply)
-                return
             end
-
-            local physnum = rag:TranslateBoneToPhysBone(bon)
-            local phys    = rag:GetPhysicsObjectNum(physnum)
-            if not IsValid(phys) then
-                StopGrabbingHead(ply)
-                return
-            end
-
-            local dist = 25
-            hg.SetCarryEnt2(
-                ply, rag, bon, phys:GetMass(),
-                Vector(-2, 0, 0),
-                ply:GetAimVector() * dist
-                + ply:EyeAngles():Up() * 5
-                + ply:EyeAngles():Right() * -5
-                + ply:GetShootPos(),
-                ply:EyeAngles() + Angle(-90, 90, 0)
-            )
-        end)
+        end
+        timer.Simple(0, TryCarry)
     end
 end
 
@@ -476,7 +477,7 @@ if SERVER then
         if grab_data and grab_data.Grabbed then
             local victim    = grab_data.Victim
 
-            local graceOver = (grab_data.GrabbedAt or 0) + 0.25 < CurTime()
+            local graceOver = (grab_data.GrabbedAt or 0) + 0.5 < CurTime()
             local carryent  = ply:GetNetVar("carryent2")
 
             local stillHeld = IsValid(victim)
@@ -720,6 +721,14 @@ if CLIENT then
         shadow    = true,
     })
 
+    local cv_hints = CreateClientConVar("zb_crusher_hints", "1", true, false, "Show Crusher ability hint HUD")
+
+    concommand.Add("zb_crusher_hints_toggle", function()
+        local newState = not cv_hints:GetBool()
+        RunConsoleCommand("zb_crusher_hints", newState and "1" or "0")
+        -- chat.AddText(Color(210, 40, 40), "[Crusher] ", color_white, "hints " .. (newState and "shown" or "hidden"))
+    end)
+
     net.Receive("Crusher_SetSubRole", function()
         local role = net.ReadString()
         LocalPlayer().SubRole = (role ~= "" and role or nil)
@@ -759,10 +768,20 @@ if CLIENT then
 
     net.Receive("HMCD_GrabConfirmed", function()
         local status = net.ReadBool()
-        local g = LocalPlayer().Ability_HeadGrab
-        if g then
-            g.Grabbed  = status and true or false
-            g.Progress = 100
+        local victim = net.ReadEntity()
+        local lp = LocalPlayer()
+        if status then
+            if not lp.Ability_HeadGrab then
+                lp.Ability_HeadGrab = { Victim = victim, Progress = 100, Grabbed = false }
+            end
+            lp.Ability_HeadGrab.Victim    = IsValid(victim) and victim or lp.Ability_HeadGrab.Victim
+            lp.Ability_HeadGrab.Grabbed   = true
+            lp.Ability_HeadGrab.Progress  = 100
+            lp.Ability_HeadGrab.GrabbedAt = CurTime()
+        else
+            if lp.Ability_HeadGrab then
+                lp.Ability_HeadGrab.Grabbed = false
+            end
         end
     end)
 
@@ -824,9 +843,9 @@ if CLIENT then
         end
         local kw, kh   = surface.GetTextSize(key or "")
         local tw       = surface.GetTextSize(desc or "")
-        kw = kw or 0
-        kh = kh or 16
-        tw = tw or 0
+        kw             = kw or 0
+        kh             = kh or 16
+        tw             = tw or 0
         local pad, gap = 5, 8
         local w        = pad + kw + gap + tw + pad
         local h        = kh + pad
@@ -858,6 +877,7 @@ if CLIENT then
         local ply = LocalPlayer()
         if not IsValid(ply) or not ply:Alive() then return end
         if not IsCrusher(ply) then return end
+        if not cv_hints:GetBool() then return end
 
         local grab_data = ply.Ability_HeadGrab
         local neck_data = ply.Ability_NeckBreak
