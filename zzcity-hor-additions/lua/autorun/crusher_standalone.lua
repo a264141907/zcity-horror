@@ -1,6 +1,7 @@
 --   give_crusher  <player name>
 --   remove_crusher <player name>
-
+--   zb_crusher_hints
+--   zb_crusher_hints_toggle
 if SERVER then AddCSLuaFile() end
 
 local CRUSHER_SUBROLE    = "traitor_strangler"
@@ -785,7 +786,6 @@ if CLIENT then
         end
     end)
 
-    local crushKeyWasDown = false
 
     hook.Add("Think", "Crusher_SA_Client", function()
         local ply = LocalPlayer()
@@ -796,36 +796,41 @@ if CLIENT then
         end
 
         if ply.Ability_HeadGrab then ContinueGrabbingHead(ply) end
+    end)
 
-        if IsCrusher(ply) then
-            -- бля надеюсь с тиками проблем не будет.
-            local crushDown = input.IsKeyDown(KEY_LBRACKET)
-            if crushDown and not crushKeyWasDown
-                and ply.Ability_HeadGrab and ply.Ability_HeadGrab.Grabbed then
-                net.Start("HMCD_Strangler_CrushRequest")
-                net.SendToServer()
-            end
-            crushKeyWasDown = crushDown
-
-            local neckDown = input.IsKeyDown(KEY_RBRACKET)
-            if neckDown then
-                local holding = ply.Ability_HeadGrab and ply.Ability_HeadGrab.Grabbed
-                if not ply.Ability_NeckBreak and not holding then
-                    local aim_ent, other_ply = NeckTraceToVictim(ply, nil, CRUSHER_NECK_REACH)
-                    if IsValid(aim_ent) and other_ply and other_ply:IsPlayer() and other_ply:Alive() then
-                        net.Start("HMCD_Crusher_NeckBreakRequest")
-                        net.WriteEntity(other_ply)
-                        net.SendToServer()
-                    end
-                end
-            elseif ply.Ability_NeckBreak then
-                net.Start("HMCD_Crusher_NeckBreakStop")
-                net.SendToServer()
-            end
-        else
-            crushKeyWasDown = false
+    concommand.Add("crusher_crush", function(ply, cmd, args)
+        if not IsValid(ply) or not ply:Alive() then return end
+        if not IsCrusher(ply) then return end
+        if ply.Ability_HeadGrab and ply.Ability_HeadGrab.Grabbed then
+            net.Start("HMCD_Strangler_CrushRequest")
+            net.SendToServer()
         end
     end)
+
+    concommand.Add("+crusher_neckbreak", function(ply)
+        if not IsValid(ply) or not ply:Alive() then return end
+        if not IsCrusher(ply) then return end
+        if ply.Ability_NeckBreak then return end -- already breaking
+        local holding = ply.Ability_HeadGrab and ply.Ability_HeadGrab.Grabbed
+        if holding then return end               -- can't break neck while head‑grabbing
+
+        local aim_ent, other_ply = NeckTraceToVictim(ply, nil, CRUSHER_NECK_REACH)
+        if IsValid(aim_ent) and other_ply and other_ply:IsPlayer() and other_ply:Alive() then
+            net.Start("HMCD_Crusher_NeckBreakRequest")
+            net.WriteEntity(other_ply)
+            net.SendToServer()
+        end
+    end)
+
+    concommand.Add("-crusher_neckbreak", function(ply)
+        if not IsValid(ply) then return end
+        if ply.Ability_NeckBreak then
+            net.Start("HMCD_Crusher_NeckBreakStop")
+            net.SendToServer()
+        end
+    end)
+
+
 
     hook.Add("hg_AdjustMouseSensitivity", "Crusher_SA_Client", function()
         if LocalPlayer().BeingVictimOfHeadGrab then return 0.15 end
@@ -883,6 +888,8 @@ if CLIENT then
         local neck_data = ply.Ability_NeckBreak
         local x = ScrW() * 0.02
         local y = ScrH() * 0.72
+        local crush_key = input.LookupBinding("crusher_crush") or "crusher_crush"
+        local neck_key = input.LookupBinding("+crusher_neckbreak") or "+crusher_neckbreak"
 
         if neck_data then
             local bar_w    = ScrW() * 0.13
@@ -895,13 +902,13 @@ if CLIENT then
             surface.SetDrawColor(col_key)
             surface.DrawOutlinedRect(x, y, bar_w, bar_h, 1)
             y = y + bar_h + 5
-            y = y + DrawHint(x, y, "Hold ]", "breaking neck...")
+            y = y + DrawHint(x, y, "Hold ", neck_key, "breaking neck...")
             return
         end
 
         if not grab_data then
             y = y + DrawHint(x, y, "ALT + E", "grab alive player (hold)")
-            y = y + DrawHint(x, y, "]", "break neck (hold, from behind)")
+            y = y + DrawHint(x, y, neck_key, "break neck (hold, from behind)")
             y = y + DrawHint(x, y, ZoomKeyLabel(), "stomp limb (look down + kick)")
         elseif not grab_data.Grabbed then
             local bar_w    = ScrW() * 0.13
@@ -917,8 +924,8 @@ if CLIENT then
             y = y + DrawHint(x, y, "Hold ALT + E", "grabbing...")
             y = y + DrawHint(x, y, "Release E", "cancel")
         else
-            y = y + DrawHint(x, y, "[", "crush head")
-            y = y + DrawHint(x, y, "]", "break neck")
+            y = y + DrawHint(x, y, crush_key, "crush head")
+            -- y = y + DrawHint(x, y, "]", "break neck")
             y = y + DrawHint(x, y, "R", "release")
         end
     end)
