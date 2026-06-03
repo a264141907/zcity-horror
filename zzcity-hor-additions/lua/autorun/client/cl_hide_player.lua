@@ -10,35 +10,50 @@ ZB_ScoreboardFilter.Register("hidden", function(ply)
     return ply:GetNWBool("zb_hidden", false)
 end)
 
-hook.Add("PostDrawHUD", "zb_hide_player_spec_blank", function()
-    local lp = LocalPlayer()
-    if not IsValid(lp) or lp:Alive() then return end
+local SPEC_HOOK = "FUCKINGSAMENAMEUSEDINHOOKFUCKME"
+local zb_specWrapped = false
 
-    local spect = lp:GetNWEntity("spect")
-    if not IsValid(spect) then return end
-    if not spect:GetNWBool("zb_hidden", false) then return end
+local function InstallSpecOverride()
+    if zb_specWrapped then return end
+    local current = hook.GetTable().HUDPaint and hook.GetTable().HUDPaint[SPEC_HOOK]
+    if not current then return end
+    local original = current
 
-    cam.Start2D()
-    surface.SetFont("HomigradFont")
+    hook.Add("HUDPaint", SPEC_HOOK, function()
+        local lp = LocalPlayer()
+        if not IsValid(lp) or lp:Alive() then
+            if original then return original() end
+            return
+        end
 
-    local txt1 = "Spectating player: Unknown"
-    local w1, h1 = surface.GetTextSize(txt1)
-    local x1 = ScrW() / 2 - w1 / 2
-    local y1 = ScrH() / 8 * 7
+        local spect = lp:GetNWEntity("spect")
+        local hidden = IsValid(spect) and spect:GetNWBool("zb_hidden", false)
 
-    local txt2 = "In-game name: Unknown"
-    local w2, h2 = surface.GetTextSize(txt2)
-    local x2 = ScrW() / 2 - w2 / 2
-    local y2 = y1 + h1
+        if not hidden then
+            if original then return original() end
+            return
+        end
 
-    surface.SetDrawColor(0, 0, 0, 255)
-    surface.DrawRect(math.min(x1, x2) - 6, y1 - 2, math.max(w1, w2) + 12, h1 + h2 + 4)
+        if (viewmode or 0) == 3 then return end
 
-    surface.SetTextColor(255, 255, 255, 255)
-    surface.SetTextPos(x1, y1)
-    surface.DrawText(txt1)
-    surface.SetTextPos(x2, y2)
-    surface.DrawText(txt2)
-    cam.End2D()
-end)
+        surface.SetFont("HomigradFont")
+        surface.SetTextColor(255, 255, 255, 255)
+
+        local txt1 = "Spectating player: Unknown"
+        local w1 = surface.GetTextSize(txt1)
+        surface.SetTextPos(ScrW() / 2 - w1 / 2, ScrH() / 8 * 7)
+        surface.DrawText(txt1)
+
+        local txt2 = "In-game name: Unknown"
+        local w2, h2 = surface.GetTextSize(txt2)
+        surface.SetTextPos(ScrW() / 2 - w2 / 2, ScrH() / 8 * 7 + h2)
+        surface.DrawText(txt2)
+    end)
+
+    zb_specWrapped = true
+end
+
+hook.Add("InitPostEntity", "zb_hide_player_spec_install", InstallSpecOverride)
+timer.Simple(1, InstallSpecOverride)
+timer.Simple(5, InstallSpecOverride)
 -- designed and realized by alagri & omnissiah respectively
