@@ -2,6 +2,10 @@
 
 if not CLIENT then return end
 
+local function IsZCity()
+    return engine.ActiveGamemode() == "zcity"
+end
+
 ZB_ScoreboardFilter = ZB_ScoreboardFilter or {}
 ZB_ScoreboardFilter.predicates = ZB_ScoreboardFilter.predicates or {}
 
@@ -29,6 +33,10 @@ hook.Add("InitPostEntity", "zb_scoreboard_filter_patch", function()
     if not originalShow then return end
 
     GAMEMODE.ScoreboardShow = function(self)
+        if not IsZCity() then
+            return originalShow(self)
+        end
+
         local anyExcluded = false
         for _, ply in ipairs(player.GetAll()) do
             if ShouldExclude(ply) then

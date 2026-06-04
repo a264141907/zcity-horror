@@ -1,5 +1,9 @@
 if not CLIENT then return end
 
+local function IsZCity()
+    return engine.ActiveGamemode() == "zcity"
+end
+
 ZB_ScoreboardFilter = ZB_ScoreboardFilter or {}
 ZB_ScoreboardFilter.predicates = ZB_ScoreboardFilter.predicates or {}
 ZB_ScoreboardFilter.Register = ZB_ScoreboardFilter.Register or function(id, fn)
@@ -20,6 +24,11 @@ local function InstallSpecOverride()
     local original = current
 
     hook.Add("HUDPaint", SPEC_HOOK, function()
+        if not IsZCity() then
+            if original then return original() end
+            return
+        end
+
         local lp = LocalPlayer()
         if not IsValid(lp) or lp:Alive() then
             if original then return original() end

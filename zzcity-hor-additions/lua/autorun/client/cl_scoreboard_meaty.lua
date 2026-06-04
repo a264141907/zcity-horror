@@ -1,3 +1,7 @@
+local function IsZCity()
+    return engine.ActiveGamemode() == "zcity"
+end
+
 local zb_meaty_active = false
 
 net.Receive("ZB_ScoreboardMeaty", function()
@@ -10,6 +14,7 @@ net.Receive("ZB_ScoreboardMeaty", function()
 end)
 
 hook.Add("ChatText", "zb_meaty_suppress_chat", function(index, name, text, msgtype)
+    if not IsZCity() then return end
     if not zb_meaty_active then return end
 
     if msgtype == "joinleave" or msgtype == "namechange" then return true end

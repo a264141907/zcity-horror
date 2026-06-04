@@ -1,5 +1,9 @@
 if not SERVER then return end
 
+local function IsZCity()
+    return engine.ActiveGamemode() == "zcity"
+end
+
 local function FindPlayer(search)
     search = string.lower(search)
     for _, ply in player.Iterator() do
@@ -11,6 +15,7 @@ local function FindPlayer(search)
 end
 
 concommand.Add("zb_hide_player", function(adminPly, cmd, args)
+    if not IsZCity() then return end
     if IsValid(adminPly) and not adminPly:IsAdmin() then return end
 
     local state = tonumber(args[1])
@@ -83,6 +88,8 @@ local function NextSpecTarget(current)
 end
 
 timer.Create("zb_hide_player_spec_guard", 0.1, 0, function()
+    if not IsZCity() then return end
+
     for _, ply in player.Iterator() do
         if ply:Alive() then continue end
 
