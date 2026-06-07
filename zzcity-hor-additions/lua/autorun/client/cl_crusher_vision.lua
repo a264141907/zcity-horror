@@ -218,7 +218,7 @@ end)
 local function scanForPrey()
     if scanCD > CurTime() then return end
     surface.PlaySound("meaty/meaty_scan_n1.mp3")
-    scanCD = CurTime() + 20
+    scanCD = CurTime() + 45.2
 
     timer.Simple(5.2, function()
         scanRadius = 0
@@ -226,7 +226,7 @@ local function scanForPrey()
         scanPos = LocalPlayer():EyePos()
         scan = true
 
-        timer.Simple(20, function()
+        timer.Simple(40, function()
             scan = false
             foundPrey = {}
             surface.PlaySound("meaty/weird.mp3")
