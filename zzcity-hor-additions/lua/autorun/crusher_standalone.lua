@@ -2,6 +2,7 @@
 --   remove_crusher <player name>
 --   zb_crusher_hints
 --   zb_crusher_hints_toggle
+
 if SERVER then AddCSLuaFile() end
 
 local CRUSHER_SUBROLE    = "traitor_strangler"
@@ -9,6 +10,49 @@ local CRUSHER_REACH      = 85
 local CRUSHER_NECK_REACH = 90
 local CRUSHER_HP_MUL     = 10
 local CRUSHER_BASE_HP    = 100
+
+local CRUSHER_LANG       = {
+    en = {
+        unresponsive  = "They seem unresponsive.",
+        gave          = "Gave Crusher abilities to ",
+        got           = "You have Crusher abilities.  ALT+E — grab,  [ — crush head,  ] — break neck,  R — release.",
+        removed       = "Removed Crusher from ",
+        hint_hold     = "Hold ",
+        breaking_neck = "breaking neck...",
+        grab_alive    = "Grab alive player (Hold)",
+        break_neck    = "Break neck (Hold, from behind)",
+        stomp_limb    = "Stomp limb (Kick alive player's body)",
+        hold_grab     = "Hold ALT + E",
+        grabbing      = "Grabbing...",
+        release_e     = "Release E",
+        cancel        = "Cancel",
+        crush_head    = "Crush head",
+        release       = "Release",
+    },
+    ru = {
+        unresponsive  = "Кажется, они без сознания.",
+        gave          = "Выданы способности крушителя игроку ",
+        got           = "У вас способности крушителя.  ALT+E — схватить,  [ — раздавить голову,  ] — сломать шею,  R — отпустить.",
+        removed       = "Сняты способности крушителя с ",
+        hint_hold     = "Удерживай ",
+        breaking_neck = "Ломаю шею...",
+        grab_alive    = "Схватить живого игрока (Удерживать)",
+        break_neck    = "Сломать шею (Удерживать, сзади)",
+        stomp_limb    = "Раздавить конечность (Удар ногой по телу живого игрока)",
+        hold_grab     = "Удерживай ALT + E",
+        grabbing      = "Хватаю...",
+        release_e     = "Отпусти E",
+        cancel        = "Отмена",
+        crush_head    = "Раздавить голову",
+        release       = "Отпустить",
+    },
+}
+
+local function L(key)
+    local lang = (CLIENT and GetConVar("gmod_language") and GetConVar("gmod_language"):GetString()) or "en"
+    local tbl = CRUSHER_LANG[lang] or CRUSHER_LANG.en
+    return tbl[key] or CRUSHER_LANG.en[key] or key
+end
 
 local function IsCrusher(ply)
     return ply.SubRole == "traitor_strangler"
@@ -629,6 +673,7 @@ if SERVER then
             return
         end
         target.SubRole = CRUSHER_SUBROLE
+        target:SetNWBool("zb_is_crusher", true)
         target.CrusherNoLimbLoss = true
         -- 		             ⢀⣀
         --  ⣠⣴⣾⣶⣶⣤⣄⣄⣤⣶⣾⣿⣿⣿⣿⣿⣶⣤⢀⣀
@@ -660,7 +705,7 @@ if SERVER then
         local who = IsValid(adminPly) and adminPly:Nick() or "Console"
         print(who .. " gave Crusher to " .. target:Nick())
         if IsValid(adminPly) then adminPly:ChatPrint("Gave Crusher abilities to " .. target:Nick()) end
-        target:ChatPrint("You have Crusher abilities.  ALT+E — grab,  [ — crush head,  ] — break neck,  R — release.")
+        -- target:ChatPrint(L("got"))
     end)
 
     concommand.Add("remove_crusher", function(adminPly, cmd, args)
@@ -682,6 +727,7 @@ if SERVER then
         StopGrabbingHead(target)
         StopBreakingNeck(target)
         target.SubRole = nil
+        target:SetNWBool("zb_is_crusher", false)
         target.CrusherNoLimbLoss = nil
         if target.organism then target.organism.superfighter = nil end
         target:SetMaxHealth(CRUSHER_BASE_HP)
@@ -699,6 +745,7 @@ if SERVER then
         StopGrabbingHead(target)
         StopBreakingNeck(target)
         target.SubRole = nil
+        target:SetNWBool("zb_is_crusher", false)
         target.CrusherNoLimbLoss = nil
         if target.organism then target.organism.superfighter = nil end
         if restoreHealth then
@@ -798,6 +845,8 @@ if CLIENT then
         end
     end)
 
+
+    local crushKeyWasDown = false
 
     hook.Add("Think", "Crusher_SA_Client", function()
         local ply = LocalPlayer()
@@ -914,14 +963,14 @@ if CLIENT then
             surface.SetDrawColor(col_key)
             surface.DrawOutlinedRect(x, y, bar_w, bar_h, 1)
             y = y + bar_h + 5
-            y = y + DrawHint(x, y, "Hold ", neck_key, "breaking neck...")
+            y = y + DrawHint(x, y, "Hold ", neck_key, L("breaking_neck"))
             return
         end
 
         if not grab_data then
-            y = y + DrawHint(x, y, "ALT + E", "grab alive player (hold)")
-            y = y + DrawHint(x, y, neck_key, "break neck (hold, from behind)")
-            y = y + DrawHint(x, y, ZoomKeyLabel(), "stomp limb (look down + kick)")
+            y = y + DrawHint(x, y, "ALT + E", L("grab_alive"))
+            y = y + DrawHint(x, y, neck_key, L("break_neck"))
+            y = y + DrawHint(x, y, ZoomKeyLabel(), L("stomp_limb"))
         elseif not grab_data.Grabbed then
             local bar_w    = ScrW() * 0.13
             local bar_h    = 7
@@ -933,12 +982,11 @@ if CLIENT then
             surface.SetDrawColor(col_key)
             surface.DrawOutlinedRect(x, y, bar_w, bar_h, 1)
             y = y + bar_h + 5
-            y = y + DrawHint(x, y, "Hold ALT + E", "grabbing...")
-            y = y + DrawHint(x, y, "Release E", "cancel")
+            y = y + DrawHint(x, y, "Hold ALT + E", L("grabbing"))
+            y = y + DrawHint(x, y, "Release E", L("cancel"))
         else
-            y = y + DrawHint(x, y, crush_key, "crush head")
-            -- y = y + DrawHint(x, y, "]", "break neck")
-            y = y + DrawHint(x, y, "R", "release")
+            y = y + DrawHint(x, y, crush_key, L("crush_head"))
+            y = y + DrawHint(x, y, "R", L("release"))
         end
     end)
 end
