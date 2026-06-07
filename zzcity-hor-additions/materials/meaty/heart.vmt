@@ -1,6 +1,9 @@
 "UnlitGeneric"
 {
 	"$basetexture" "meaty/heart"
-	"$translucent" 1
+	"$nocull" 1
+	"$additive" 0
+	"$vertexalpha" 1
 	"$vertexcolor" 1
+	"$ignorez"	1
 }
