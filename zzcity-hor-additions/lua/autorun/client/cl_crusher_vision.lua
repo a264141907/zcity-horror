@@ -196,8 +196,8 @@ hook.Add("PostDrawTranslucentRenderables", "zb_crusher_FindPrey", function()
     end
 end)
 
-local glow        = Material("textures/heart.png")
-local crusherglow = Material("textures/heart.png")
+local glow        = Material("meaty/heart.vtm")
+local crusherglow = Material("meaty/heart.vtm")
 
 hook.Add("HUDPaint", "zb_crusher_FindPrey", function()
     if not CrusherActive() then return end
@@ -208,7 +208,7 @@ hook.Add("HUDPaint", "zb_crusher_FindPrey", function()
         local marginX, marginY = scrH * .1, scrH * .1
         local x = math.Clamp(sp.x, marginX, scrW - marginX)
         local y = math.Clamp(sp.y, marginY, scrH - marginY)
-        local size = 30
+        local size = 35
         surface.SetDrawColor(ColorAlpha(v.color, math.max(0, (v.time - CurTime()) * 100)))
         surface.SetMaterial(v.crusher and crusherglow or glow)
         surface.DrawTexturedRect(x - size / 2, y - size / 2, size, size)
