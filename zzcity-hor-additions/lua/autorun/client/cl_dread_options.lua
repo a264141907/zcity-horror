@@ -2,7 +2,7 @@ if not CLIENT then return end
 
 hook.Add("PopulateToolMenu", "zb_zh_dread_options", function()
     spawnmenu.AddToolMenuOption("Options", "alagri's ZHorror", "zb_zh_dread",
-        "Crusher dread", "", "", function(panel)
+        "Crusher", "", "", function(panel)
             panel:ClearControls()
 
             if not LocalPlayer():IsAdmin() then
@@ -15,5 +15,7 @@ hook.Add("PopulateToolMenu", "zb_zh_dread_options", function()
 
             local slider = panel:NumSlider("Dread range", "zb_zh_dread_range", 25, 1500, 0)
             panel:Help("Distance at which a crusher starts affecting heartrate.")
+            panel:NumSlider("Crusher HP multiplier", "zb_zh_crusher_hpmul", 1, 100, 0)
+            panel:Help("Crusher health pool and damage reduction (base HP x this).")
         end)
 end)

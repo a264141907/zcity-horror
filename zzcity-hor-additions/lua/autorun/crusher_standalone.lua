@@ -8,8 +8,17 @@ if SERVER then AddCSLuaFile() end
 local CRUSHER_SUBROLE    = "traitor_strangler"
 local CRUSHER_REACH      = 85
 local CRUSHER_NECK_REACH = 90
-local CRUSHER_HP_MUL     = 10
+-- local CRUSHER_HP_MUL     = 10
 local CRUSHER_BASE_HP    = 100
+
+if SERVER and not ConVarExists("zb_zh_crusher_hpmul") then
+    CreateConVar("zb_zh_crusher_hpmul", "10", FCVAR_ARCHIVE + FCVAR_REPLICATED,
+        "ZHorror: crusher HP / damage-reduction multiplier", 1, 100)
+end
+local function CrusherHPMul()
+    local cv = GetConVar("zb_zh_crusher_hpmul")
+    return (cv and cv:GetInt()) or 10
+end
 
 local CRUSHER_LANG       = {
     en = {
@@ -649,7 +658,7 @@ if SERVER then
         if IsValid(dmgInfo) or dmgInfo then
             -- dmgInfo
             if isfunction(dmgInfo.SetDamage) and isfunction(dmgInfo.GetDamage) then
-                dmgInfo:SetDamage(dmgInfo:GetDamage() / CRUSHER_HP_MUL)
+                dmgInfo:SetDamage(dmgInfo:GetDamage() / CrusherHPMul())
             end
         end
     end)
@@ -658,7 +667,7 @@ if SERVER then
     hook.Add("EntityTakeDamage", "Crusher_SA_HPScale", function(ent, dmgInfo)
         if not IsValid(ent) or not ent:IsPlayer() then return end
         if not ent.CrusherNoLimbLoss then return end
-        dmgInfo:ScaleDamage(1 / CRUSHER_HP_MUL)
+        dmgInfo:ScaleDamage(1 / CrusherHPMul())
     end)
 
     local function FindPlayer(search)
@@ -704,8 +713,8 @@ if SERVER then
         --    ⣆⢻⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⡿⢃⢂⣼⣿⣿⣿
         --    ⢿⣧⠹⣿⣿⣿⣷⣿⣿⣿⣿⣿⡟⣱⢃⣾⣿⣿⣿⣿⣄⡀
         --    ⠸⠿⠷⠔⠭⠭⠭⠭⠭⠥⠶⠶⠾⠇⠾⠿⠿⠿⠿⠿⠿⠿
-        target:SetMaxHealth(CRUSHER_BASE_HP * CRUSHER_HP_MUL)
-        target:SetHealth(CRUSHER_BASE_HP * CRUSHER_HP_MUL)
+        target:SetMaxHealth(CRUSHER_BASE_HP * CrusherHPMul())
+        target:SetHealth(CRUSHER_BASE_HP * CrusherHPMul())
 
         if target.organism then
             target.organism.superfighter = true
