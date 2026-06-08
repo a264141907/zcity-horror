@@ -368,6 +368,14 @@ local function DisarmOther(ply, other_ply)
     end
 end
 
+local function blastThatShit(ply)
+    local ang = ply:GetEyeTrace()
+    local ent = ang.Entity
+    if IsValid(ent) and hgIsDoor(ent) then
+        hgBlastThatDoor(ent, ply:GetAimVector() * 250)
+    end
+end
+
 if SERVER then
     util.AddNetworkString("HMCD_BeingVictimOfHeadGrab")
     util.AddNetworkString("HMCD_GrabbingHead")
@@ -572,6 +580,10 @@ if SERVER then
             if ply:EyeAngles()[1] >= 20 then
                 timer.Simple(0.33, function()
                     ApplyStompLimbDamage(ply)
+                end)
+            else
+                timer.Simple(0.33, function()
+                    blastThatShit(ply)
                 end)
             end
         elseif not kicking then
