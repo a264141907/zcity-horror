@@ -378,10 +378,15 @@ local function DisarmOther(ply, other_ply)
 end
 
 local function blastThatShit(ply)
-    local ang = ply:GetEyeTrace()
-    local ent = ang.Entity
-    if IsValid(ent) and hgIsDoor(ent) then
-        hgBlastThatDoor(ent, ply:GetAimVector() * 250)
+    local tr         = util.TraceHull({
+        start  = ply:EyePos(),
+        endpos = ply:EyePos() + ply:EyeAngles():Forward() * 90,
+        filter = { ply, hg.GetCurrentCharacter(ply) },
+        mins   = -Vector(5, 5, 5),
+        maxs   = Vector(5, 5, 5),
+    })
+    if tr.Hit and IsValid(tr.Entity) and hgIsDoor(tr.Entity) then
+        hgBlastThatDoor(tr.Entity, ply:GetAimVector() * 250)
     end
 end
 
