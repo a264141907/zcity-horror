@@ -1,9 +1,5 @@
 if not CLIENT then return end
 
-local function IsZCity()
-    return engine.ActiveGamemode() == "zcity"
-end
-
 local function IsCrusher(ply)
     return IsValid(ply)
         and (ply:GetNWBool("zb_is_crusher", false)
@@ -12,7 +8,7 @@ local function IsCrusher(ply)
 end
 
 local function CrusherActive()
-    return IsZCity() and IsCrusher(LocalPlayer()) and LocalPlayer():Alive()
+    return IsCrusher(LocalPlayer()) and LocalPlayer():Alive()
 end
 
 local nvg_enabled = false
