@@ -11,7 +11,7 @@ local CRUSHER_NECK_REACH = 90
 -- local CRUSHER_HP_MUL     = 10
 local CRUSHER_BASE_HP    = 100
 
-if SERVER and not ConVarExists("zb_zh_crusher_hpmul") then
+if not ConVarExists("zb_zh_crusher_hpmul") then
     CreateConVar("zb_zh_crusher_hpmul", "10", FCVAR_ARCHIVE + FCVAR_REPLICATED,
         "ZHorror: crusher HP / damage-reduction multiplier", 1, 100)
 end

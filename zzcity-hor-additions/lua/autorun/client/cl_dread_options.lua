@@ -1,5 +1,14 @@
 if not CLIENT then return end
 
+if not ConVarExists("zb_zh_dread_enabled") then
+    CreateConVar("zb_zh_dread_enabled", "1", FCVAR_ARCHIVE + FCVAR_REPLICATED,
+        "ZHorror: enable crusher dread (raises heartrate near a crusher)", 0, 1)
+end
+if not ConVarExists("zb_zh_dread_range") then
+    CreateConVar("zb_zh_dread_range", "900", FCVAR_ARCHIVE + FCVAR_REPLICATED,
+        "ZHorror: crusher dread range", 25, 1500)
+end
+
 hook.Add("PopulateToolMenu", "zb_zh_dread_options", function()
     spawnmenu.AddToolMenuOption("Options", "alagri's ZHorror", "zb_zh_dread",
         "Crusher", "", "", function(panel)
