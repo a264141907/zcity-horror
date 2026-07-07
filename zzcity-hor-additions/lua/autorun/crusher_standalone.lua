@@ -796,6 +796,14 @@ if SERVER then
             ClearCrusher(victim, false)
         end
     end)
+
+    hook.Add("ZB_PreRoundStart", "ClearCrushersOnRoundEnd", function()
+        for _, i in pairs(player.GetAll()) do
+            if IsValid(i) then
+                ClearCrusher(i, false)
+            end
+        end
+    end)
 end
 
 if CLIENT then
