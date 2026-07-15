@@ -593,7 +593,9 @@ if SERVER then
             ply.CrusherStompScheduled = true
             if ply:EyeAngles()[1] >= 20 then
                 timer.Simple(0.33, function()
-                    ApplyStompLimbDamage(ply)
+                    if !ply.FakeRagdoll then
+                        ApplyStompLimbDamage(ply)
+                    end
                 end)
             else
                 timer.Simple(0.33, function()
